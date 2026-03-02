@@ -1,0 +1,30 @@
+# ── Build output ────────────────────────────────────────────────────────────────
+bin/
+*.exe
+*.exe~
+
+# ── Environment / secrets ───────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Test artefacts ──────────────────────────────────────────────────────────────
+*.test
+coverage.out
+coverage.html
+
+# ── Air live-reload temp dir ────────────────────────────────────────────────────
+tmp/
+
+# ── Frontend (no build step — web/ is committed as-is) ──────────────────────────
+# Nothing to ignore here; web/index.html and web/app.js are plain files.
+
+# ── OS ──────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDEs ────────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo

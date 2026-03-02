@@ -1,0 +1,269 @@
+basePath: /
+definitions:
+  api.createTargetRequest:
+    properties:
+      interval_seconds:
+        example: 60
+        type: integer
+      name:
+        example: My API
+        type: string
+      timeout_seconds:
+        example: 10
+        type: integer
+      url:
+        example: https://example.com/health
+        type: string
+    required:
+    - name
+    - url
+    type: object
+  api.errorResponse:
+    properties:
+      error:
+        example: something went wrong
+        type: string
+    type: object
+  api.statsResponse:
+    properties:
+      period_hours:
+        example: 24
+        type: integer
+      target_id:
+        example: 1
+        type: integer
+      uptime_pct:
+        example: 99.5
+        type: number
+    type: object
+  models.CheckResult:
+    properties:
+      checked_at:
+        type: string
+      error:
+        type: string
+      id:
+        type: integer
+      latency_ms:
+        type: integer
+      status_code:
+        type: integer
+      target_id:
+        type: integer
+      up:
+        type: boolean
+    type: object
+  models.Target:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      id:
+        type: integer
+      interval_seconds:
+        type: integer
+      name:
+        type: string
+      timeout_seconds:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.TargetStatus:
+    properties:
+      checked_at:
+        type: string
+      latency_ms:
+        type: integer
+      status_code:
+        type: integer
+      target_id:
+        type: integer
+      up:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: API Support
+  description: Distributed HTTP uptime monitoring service.
+  license:
+    name: MIT
+  title: Uptime Lite API
+  version: "1.0"
+paths:
+  /api/v1/targets:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Target'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List all monitored targets
+      tags:
+      - targets
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Target definition
+        in: body
+        name: target
+        required: true
+        schema:
+          $ref: '#/definitions/api.createTargetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Target'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Add a new monitored target
+      tags:
+      - targets
+  /api/v1/targets/{id}:
+    delete:
+      parameters:
+      - description: Target ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Delete a target and its history
+      tags:
+      - targets
+  /api/v1/targets/{id}/history:
+    get:
+      parameters:
+      - description: Target ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Max number of results (1–1000, default 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CheckResult'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get probe history for a target
+      tags:
+      - targets
+  /api/v1/targets/{id}/stats:
+    get:
+      parameters:
+      - description: Target ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.statsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get uptime percentage for the last 24 hours
+      tags:
+      - targets
+  /api/v1/targets/{id}/status:
+    get:
+      parameters:
+      - description: Target ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TargetStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get the latest probe result (served from Redis cache)
+      tags:
+      - targets
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - system
+schemes:
+- http
+- https
+swagger: "2.0"
